@@ -110,7 +110,7 @@ template KeylessMethods ( Node, alias eb_first, alias eb_last )
 
     ***************************************************************************/
 
-    public int opApply ( int delegate ( ref Node node ) dg )
+    public int opApply ( scope int delegate ( ref Node node ) dg )
     {
         int ret = 0;
 
@@ -129,7 +129,7 @@ template KeylessMethods ( Node, alias eb_first, alias eb_last )
 
     ***************************************************************************/
 
-    public int opApply_reverse ( int delegate ( ref Node node ) dg )
+    public int opApply_reverse ( scope int delegate ( ref Node node ) dg )
     {
         int ret = 0;
 
@@ -158,7 +158,7 @@ template KeylessMethods ( Node, alias eb_first, alias eb_last )
     private Node* ebCall ( alias eb_func, T ... ) ( T args )
     {
         static assert (is (typeof (eb_func(&this.root, args)) ==
-                           typeof (&Node.init.node_)));
+                           typeof (Node.node_)*));
 
         return cast (Node*) eb_func(&this.root, args);
     }

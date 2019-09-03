@@ -116,7 +116,7 @@ public class StringStructSerializer ( Char )
 
     ***************************************************************************/
 
-    private const indent_size = 3;
+    private static immutable indent_size = 3;
 
 
     /***************************************************************************
@@ -502,7 +502,7 @@ public class StringStructSerializer ( Char )
         // The set of characters to use for creating cases within the following
         // switch block. These are just whitepace or unprintable characters but
         // without their preceding backslashes.
-        const letters = ['0', 'a', 'b', 'f', 'n', 'r', 't', 'v'];
+        static immutable letters = ['0', 'a', 'b', 'f', 'n', 'r', 't', 'v'];
 
         switch ( c )
         {
@@ -894,18 +894,9 @@ unittest
 
     serializer.serialize(buffer, st);
 
-    version (D_Version2)
-    {
-        test!("==")(buffer.length, 50);
-        test!("==")(buffer, "struct StructWithTypedef:\n" ~
-                         "   AdskilletId a : 1000\n");
-    }
-    else
-    {
-        test!("==")(buffer.length, 44);
-        test!("==")(buffer, "struct StructWithTypedef:\n" ~
-                         "   ulong a : 1000\n");
-    }
+    test!("==")(buffer.length, 50);
+    test!("==")(buffer, "struct StructWithTypedef:\n" ~
+                     "   AdskilletId a : 1000\n");
 }
 
 unittest

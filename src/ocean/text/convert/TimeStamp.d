@@ -86,38 +86,6 @@ char[] toString (Time time)
 
 /******************************************************************************
 
-  Template wrapper to make life simpler. Returns a text version
-  of the provided value.
-
-  See format() for details
-
- ******************************************************************************/
-
-wchar[] toString16 (Time time)
-{
-    wchar[32] tmp = void;
-
-    return format (tmp, time).dup;
-}
-
-/******************************************************************************
-
-  Template wrapper to make life simpler. Returns a text version
-  of the provided value.
-
-  See format() for details
-
- ******************************************************************************/
-
-dchar[] toString32 (Time time)
-{
-    dchar[32] tmp = void;
-
-    return format (tmp, time).dup;
-}
-
-/******************************************************************************
-
   RFC1123 formatted time
 
   Converts to the format "Sun, 06 Nov 1994 08:49:37 GMT", and
@@ -166,7 +134,7 @@ Const!(T)[] format(T) (T[] output, Time t)
 
 unittest
 {
-    const STR_1970 = "Thu, 01 Jan 1970 00:00:00 GMT";
+    static immutable STR_1970 = "Thu, 01 Jan 1970 00:00:00 GMT";
     mstring buf;
     buf.length = 29;
     test(format(buf, Time.epoch1970) == STR_1970);
@@ -215,7 +183,7 @@ Const!(T)[] format8601(T) (T[] output, Time t)
 
 unittest
 {
-    const STR_1970 = "1970-01-01T00:00:00Z";
+    static immutable STR_1970 = "1970-01-01T00:00:00Z";
     mstring buf;
     buf.length = 29;
     test(format8601(buf, Time.epoch1970) == STR_1970);
@@ -720,7 +688,7 @@ private int parseShortDay(T) (ref T* p)
 
  ******************************************************************************/
 
-private uint parseFullDay(T) (ref T* p)
+private size_t parseFullDay(T) (ref T* p)
 {
     static  T[][] days = [
         "Sunday",
@@ -732,7 +700,7 @@ private uint parseFullDay(T) (ref T* p)
         "Saturday",
     ];
 
-    foreach (uint i, day; days)
+    foreach (size_t i, day; days)
         if (day == p[0..day.length])
         {
             p += day.length;
@@ -764,8 +732,8 @@ private static int parseInt(T) (ref T* p, T* e)
 
 unittest
 {
-    wchar[30] tmp;
-    Const!(wchar)[] s = "Sun, 06 Nov 1994 08:49:37 GMT";
+    char[30] tmp;
+    Const!(char)[] s = "Sun, 06 Nov 1994 08:49:37 GMT";
 
     auto time = parse (s);
     auto text = format (tmp, time);

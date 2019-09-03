@@ -259,8 +259,8 @@ public class StatsLog
 
     ***************************************************************************/
 
-    public const time_t default_period = 30; // 30 seconds
-    public const istring default_file_name = "log/stats.log";
+    public static immutable time_t default_period = 30; // 30 seconds
+    public static immutable istring default_file_name = "log/stats.log";
 
 
     /***************************************************************************
@@ -335,7 +335,7 @@ public class StatsLog
     ***************************************************************************/
 
     public this ( Config config,
-        Appender delegate ( istring file, Appender.Layout layout ) new_appender,
+        scope Appender delegate ( istring file, Appender.Layout layout ) new_appender,
         istring name = "Stats" )
     {
         if (config.socket_path.length)
@@ -476,7 +476,7 @@ public class StatsLog
         scope sink = (cstring v) { this.buffer ~= v; };
         foreach ( i, value; values.tupleof )
         {
-            auto value_name = fieldIdentifier!(T, i);
+            auto value_name = .identifier!(T.tupleof[i]);
 
             static if (is(typeof(value) : long))
                 long fmtd_value = value;

@@ -38,11 +38,7 @@ import ocean.meta.types.Qualifiers;
 public template hasMember ( T, istring name )
 {
     static assert (isAggregateType!(T));
-
-    version (D_Version2)
-        mixin ("enum hasMember = __traits(hasMember, T, name);");
-    else
-        mixin ("const hasMember = is(typeof(T." ~ name ~ "));");
+    enum hasMember = __traits(hasMember, T, name);
 }
 
 ///
@@ -80,10 +76,10 @@ public template hasMethod ( T, istring name, F )
 {
     static if (hasMember!(T, name))
     {
-        const hasMethod = is(typeof(mixin("&T.init." ~ name)) : F);
+        static immutable hasMethod = is(typeof(mixin("&T.init." ~ name)) : F);
     }
     else
-        const hasMethod = false;
+        static immutable hasMethod = false;
 }
 
 ///
@@ -102,4 +98,35 @@ unittest
 
     static assert ( hasMethod!(S, "foo2", int function(double)));
     static assert (!hasMethod!(S, "foo3", int delegate(double)));
+}
+
+/*******************************************************************************
+
+    Non-recursive aggregate field size calculation
+
+    Returns:
+        sum of individual sizes of all aggregate fields, identical to S.sizeof
+        if `align(1)` is used.
+
+*******************************************************************************/
+
+public template totalMemberSize ( S )
+{
+    static assert (isAggregateType!S);
+
+    private size_t calculate ( )
+    {
+        size_t size;
+        foreach (field; S.init.tupleof)
+            size += typeof(field).sizeof;
+        return size;
+    }
+
+    enum totalMemberSize = calculate();
+}
+
+unittest
+{
+    struct S { int x; byte[2] y; }
+    static assert (totalMemberSize!S == 6);
 }

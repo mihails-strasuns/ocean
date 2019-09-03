@@ -21,18 +21,18 @@ import ocean.meta.types.Qualifiers;
 
 /*******************************************************************************
 
-    Replacement for `typedef` which is completely deprecated. It generates
-    usual `typedef` when built with D1 compiler and wrapper struct with
-    `alias this` when built with D2 compiler.
+    Replacement for `typedef` which is completely deprecated.
+
+    It generates a wrapper struct with `alias this`.
 
     Used as mixin(Typedef!(hash_t, "MyHash"))
 
-    D2 version has `IsTypedef` member alias defined so that any struct type
-    can be quickly checked if it originates from typedef via
-    `is(typeof(S.IsTypedef))`. This is a hack reserved for backwards
-    compatibility in libraries and should be never relied upon in user code.
+    `IsTypedef` member alias is defined so that any struct type can be quickly
+    checked if it originates from typedef via `is(typeof(S.IsTypedef))`.
+    This is a hack reserved for backwards compatibility in libraries and should
+    never be relied upon in user code.
 
-    Template Parameters:
+    Parameters:
         T       = type to typedef
         name    = identifier string for new type
         initval = optional default value for that type
@@ -42,51 +42,30 @@ import ocean.meta.types.Qualifiers;
 template Typedef(T, istring name, T initval)
 {
     static assert (name.length, "Can't create Typedef with an empty identifier");
-    version(D_Version2)
-    {
-        mixin(`
-            enum Typedef =
-                ("static struct " ~ name ~
-                "{ " ~
-                "alias IsTypedef = void;" ~
-                T.stringof ~ " value = " ~ initval.stringof ~ ";" ~
-                "alias value this;" ~
-                "this(" ~ T.stringof ~ " rhs) { this.value = rhs; }" ~
-                " }");
-        `);
-    }
-    else
-    {
-        mixin(`
-            const Typedef = ("typedef " ~ T.stringof ~ " " ~ name ~
-                " = " ~ initval.stringof ~ ";");
-        `);
-    }
+
+    enum Typedef =
+        ("static struct " ~ name ~
+        "{ " ~
+        "alias IsTypedef = void;" ~
+        T.stringof ~ " value = " ~ initval.stringof ~ ";" ~
+        "alias value this;" ~
+        "this(" ~ T.stringof ~ " rhs) { this.value = rhs; }" ~
+        " }");
 }
 
 /// ditto
 template Typedef(T, istring name)
 {
     static assert (name.length, "Can't create Typedef with an empty identifier");
-    version(D_Version2)
-    {
-        mixin(`
-            enum Typedef =
-                ("static struct " ~ name ~
-                "{ " ~
-                "alias IsTypedef = void;" ~
-                T.stringof ~ " value; " ~
-                "alias value this;" ~
-                "this(" ~ T.stringof ~ " rhs) { this.value = rhs; }" ~
-                " }");
-        `);
-    }
-    else
-    {
-        mixin(`
-            const Typedef = ("typedef " ~ T.stringof ~ " " ~ name ~ ";");
-        `);
-    }
+
+    enum Typedef =
+        ("static struct " ~ name ~
+        "{ " ~
+        "alias IsTypedef = void;" ~
+        T.stringof ~ " value; " ~
+        "alias value this;" ~
+        "this(" ~ T.stringof ~ " rhs) { this.value = rhs; }" ~
+        " }");
 }
 
 unittest
@@ -142,19 +121,7 @@ unittest
 
 template TypedefBaseType ( T )
 {
-    version (D_Version2)
-    {
-        alias typeof(T.value) TypedefBaseType;
-    }
-    else
-    {
-        // use mixin to avoid typedef keyword error from DMD2 when
-        // lexing/parsing
-        mixin("
-            static if (is(T Base == typedef))
-                alias Base TypedefBaseType;
-        ");
-    }
+    alias typeof(T.value) TypedefBaseType;
 }
 
 unittest

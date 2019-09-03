@@ -124,12 +124,12 @@ class TempFile : File
      * TempStyle for creating a transient temporary file that only the current
      * user can access.
      */
-    const TempStyle Transient = {Transience.Transient};
+    static immutable TempStyle Transient = {Transience.Transient};
     /**
      * TempStyle for creating a permanent temporary file that only the current
      * user can access.
      */
-    const TempStyle Permanent = {Transience.Permanent};
+    static immutable TempStyle Permanent = {Transience.Permanent};
 
     // Path to the temporary file
     private istring _path;
@@ -178,13 +178,13 @@ class TempFile : File
         error("could not create temporary file");
     }
 
-    private const DEFAULT_LENGTH = 6;
-    private const DEFAULT_PREFIX = ".tmp";
+    private static immutable DEFAULT_LENGTH = 6;
+    private static immutable DEFAULT_PREFIX = ".tmp";
 
     // Use "~" to work around a bug in DMD where it elides empty constants
-    private const DEFAULT_SUFFIX = "~";
+    private static immutable DEFAULT_SUFFIX = "~";
 
-    private const JUNK_CHARS =
+    private static immutable JUNK_CHARS =
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
     /***************************************************************************
@@ -275,8 +275,9 @@ class TempFile : File
             istring prefix=DEFAULT_PREFIX,
             istring suffix=DEFAULT_SUFFIX)
     {
+        import core.memory;
         auto junk = new char[length];
-        scope(exit) delete junk;
+        scope(exit) GC.free(junk.ptr);
 
         foreach( ref c ; junk )
         {

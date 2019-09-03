@@ -169,7 +169,7 @@ public abstract class IAggregatePool ( T ) : IPool, IFreeList!(ItemType_!(T))
         // WORKAROUND: because of DMD1 bug placing this condition in static assert
         // directly causes it to fail even if condition is in fact true. Using
         // intermediate constant fixes that
-        const _assignable = is(typeof({ T t; t.object_pool_index = 4711; }));
+        static immutable _assignable = is(typeof({ T t; t.object_pool_index = 4711; }));
         static assert (
             _assignable,
             T.stringof ~ ".object_pool_index must be assignable"
@@ -606,14 +606,18 @@ public abstract class IAggregatePool ( T ) : IPool, IFreeList!(ItemType_!(T))
     }
     body
     {
+        import core.memory;
+
         static if (is (ItemType == class))
         {
-            delete item.obj;
+            destroy(item.obj);
+            GC.free(cast(void*) item.obj);
             item.obj = null;
         }
         else
         {
-            delete item.ptr;
+            destroy(item.ptr);
+            GC.free(cast(void*) item.ptr);
             item.ptr = null;
         }
     }
@@ -689,7 +693,7 @@ public abstract class IAggregatePool ( T ) : IPool, IFreeList!(ItemType_!(T))
 
         ***********************************************************************/
 
-        public int opApply ( int delegate ( ref T item ) dg )
+        public int opApply ( scope int delegate ( ref T item ) dg )
         {
             int ret = 0;
 
@@ -725,7 +729,7 @@ public abstract class IAggregatePool ( T ) : IPool, IFreeList!(ItemType_!(T))
 
         ***********************************************************************/
 
-        public int opApply ( int delegate ( ref size_t i, ref T item ) dg )
+        public int opApply ( scope int delegate ( ref size_t i, ref T item ) dg )
         {
             int ret = 0;
             size_t i = 0;

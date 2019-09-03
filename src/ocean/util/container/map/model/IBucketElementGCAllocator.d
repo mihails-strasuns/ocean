@@ -51,7 +51,8 @@ class IBucketElementGCAllocator: IAllocator
 
     protected override void deallocate ( void* element )
     {
-        delete element;
+        import core.memory;
+        GC.free(element);
     }
 
     /***************************************************************************
@@ -133,7 +134,7 @@ class IBucketElementGCAllocator: IAllocator
     ***************************************************************************/
 
     public override void parkElements (size_t n,
-                                       void delegate ( IParkingStack park ) dg)
+                                       scope void delegate ( IParkingStack park ) dg)
     {
         scope park = new ParkingStack(n);
         dg(park);

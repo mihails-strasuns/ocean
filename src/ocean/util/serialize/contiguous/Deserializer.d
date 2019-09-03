@@ -180,7 +180,7 @@ struct Deserializer
 
     **************************************************************************/
 
-    alias typeof(*this) This;
+    alias typeof(this) This;
 
     /***************************************************************************
 
@@ -190,7 +190,7 @@ struct Deserializer
 
     ***************************************************************************/
 
-    public const max_length = size_t.max;
+    public enum max_length = size_t.max;
 
     /***************************************************************************
 
@@ -1073,8 +1073,7 @@ struct Deserializer
 
     template StripQualifier ( T )
     {
-        version (D_Version2)
-            mixin("static assert (!is(T == immutable));");
+        static assert (!is(T == immutable));
         alias Unqual!(T) StripQualifier;
     }
 

@@ -397,8 +397,10 @@ public abstract class DaemonApp : Application,
     {
         super(name, desc);
 
-        // DaemonApp always handles SIGTERM:
-        settings.signals ~= core.sys.posix.signal.SIGTERM;
+        // If derived app does not handle signals explicitly, default
+        // DaemonApp handler will be used which handles SIGTERM
+        if (settings.signals.length == 0)
+            settings.signals = [ core.sys.posix.signal.SIGTERM ];
 
         // Create and register arguments extension
         this.args_ext = new ArgumentsExt(name, desc, settings.usage,
@@ -541,7 +543,7 @@ public abstract class DaemonApp : Application,
 
     private static ulong timeToNextInterval (ulong interval, time_t current = time(null))
     {
-        return (current % interval) ? (interval - (current % interval)) : 0;
+        return (current % interval) ? (interval - (current % interval)) : interval;
     }
 
     unittest
@@ -551,7 +553,7 @@ public abstract class DaemonApp : Application,
         test!("==")(timeToNextInterval(20, orig), 6);
         test!("==")(timeToNextInterval(30, orig), 16);
         test!("==")(timeToNextInterval(60, orig), 46);
-        test!("==")(timeToNextInterval(15, orig + 1), 0);
+        test!("==")(timeToNextInterval(15, orig + 1), 15);
     }
 
     /***************************************************************************

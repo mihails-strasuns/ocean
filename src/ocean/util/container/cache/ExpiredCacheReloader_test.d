@@ -18,7 +18,7 @@ module ocean.util.container.cache.ExpiredCacheReloader_test;
 
 
 import ocean.util.container.cache.ExpiredCacheReloader;
-import ocean.util.serialize.contiguous.package_;
+import ocean.util.serialize.contiguous;
 
 import ocean.io.select.EpollSelectDispatcher,
        ocean.io.select.client.TimerEvent;
@@ -109,7 +109,7 @@ class TestCache(S) : ExpiredCacheReloader!(S)
         this.add_empty = newval;
     }
 
-    override protected void getData ( hash_t key, void delegate ( Contiguous!(S) data ) got )
+    override protected void getData ( hash_t key, scope void delegate ( Contiguous!(S) data ) got )
     {
         auto data = key in this.source;
         if (data)

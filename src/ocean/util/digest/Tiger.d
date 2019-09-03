@@ -23,7 +23,7 @@ module ocean.util.digest.Tiger;
 import ocean.transition;
 
 import ocean.core.Verify;
-
+import ocean.core.TypeConvert;
 import ocean.core.ByteSwap;
 
 import ocean.util.digest.MerkleDamgard;
@@ -40,7 +40,7 @@ final class Tiger : MerkleDamgard
 {
         private ulong[3]        context;
         private uint            npass = 3;
-        private const uint      padChar = 0x01;
+        private static immutable uint      padChar = 0x01;
 
         /***********************************************************************
 
@@ -870,7 +870,10 @@ unittest
         "Tiger - A Fast New Hash Function, by Ross Anderson and Eli Biham",
         "Tiger - A Fast New Hash Function, by Ross Anderson and Eli Biham, proceedings of Fast Software Encryption 3, Cambridge.",
         "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq",
-        x"00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000008000000",
+        arrayOf!(char)(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8,
+                0, 0, 0)
     ];
 
     static istring[] results = [

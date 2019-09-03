@@ -280,11 +280,8 @@ public class StandardKeyHashingMap ( size_t V, K ) : Map!(V, K)
 
 public abstract class Map ( V, K ) : BucketSet!(V.sizeof, K)
 {
-    version (D_Version2)
-    {
-        // add to overload set explicitly
-        alias BucketSet!(V.sizeof, K).remove remove;
-    }
+    // add to overload set explicitly
+    alias BucketSet!(V.sizeof, K).remove remove;
 
     /***************************************************************************
 
@@ -312,19 +309,19 @@ public abstract class Map ( V, K ) : BucketSet!(V.sizeof, K)
                          "in ", __FILE__, ":", __LINE__.stringof);
         }
 
-        const V_is_static_array = true;
+        static immutable V_is_static_array = true;
 
         alias Base[] VReturn;
 
-        const Base[V.length] v_init = Base.init;
+        static immutable Base[V.length] v_init = Base.init;
     }
     else
     {
-        const V_is_static_array = false;
+        static immutable V_is_static_array = false;
 
         alias V VReturn;
 
-        const v_init = V.init;
+        static immutable v_init = V.init;
     }
 
     /***************************************************************************
@@ -635,7 +632,7 @@ public abstract class Map ( V, K ) : BucketSet!(V.sizeof, K)
 
     ***************************************************************************/
 
-    public bool remove ( K key, void delegate ( ref V val ) dg = null )
+    public bool remove ( K key, scope void delegate ( ref V val ) dg = null )
     {
         scope dg2 = (ref Bucket.Element element)
                     {

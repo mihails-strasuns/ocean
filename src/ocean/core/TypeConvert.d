@@ -15,8 +15,6 @@
 
 module ocean.core.TypeConvert;
 
-
-
 import ocean.meta.traits.Indirections;
 import ocean.meta.types.Qualifiers;
 import ocean.meta.types.Function;
@@ -57,19 +55,19 @@ version ( UnitTest ) import ocean.core.Test;
 
 *******************************************************************************/
 
-version (D_Version2) public Immut!(T)[] assumeUnique (T) (T[] input)
+public immutable(T)[] assumeUnique (T) (T[] input)
 {
     return .assumeUnique(input);
 }
 
-version (D_Version2) unittest
+unittest
 {
     auto s = assumeUnique("1234".dup);
     static assert(is(typeof(s) == istring));
     test!("==")(s, "1234");
 }
 
-public Immut!(T)[] assumeUnique (T) (ref T[] input)
+public immutable(T)[] assumeUnique (T) (ref T[] input)
 {
     auto tmp = input;
     input = null;
@@ -280,7 +278,7 @@ template arrayOf (T)
 
 version (UnitTest)
 {
-    const _arrayOf_global_scope = arrayOf!(byte)(1, 2, 3);
+    static immutable _arrayOf_global_scope = arrayOf!(byte)(1, 2, 3);
 }
 
 ///
@@ -297,7 +295,7 @@ unittest
     auto arr = arrayOf!(Hash)(1, 2, 3);
 
     // ensure it works in CTFE
-    const manifest = arrayOf!(long)(42, 44, 46);
+    static immutable manifest = arrayOf!(long)(42, 44, 46);
     static assert (manifest.length == 3);
     static assert (manifest[0] == 42L);
     static assert (manifest[1] == 44L);
@@ -344,7 +342,7 @@ ReturnTypeOf!(F) delegate() toContextDg ( alias F ) ( void* context )
     {
         ReturnTypeOf!(F) method ( )
         {
-            void* context = cast(void*) this;
+            void* context = cast(void*) (&this);
 
             // do real work via provided F function:
             return F(context);
@@ -371,4 +369,74 @@ unittest
     test!("==")(cast(size_t) dg.ptr, 42);
     dg();
     test(done);
+}
+
+/*******************************************************************************
+
+    Helper function to wrap any callable type in a delegate. Most useful when
+    you need to pass function pointer as a delegate argument.
+
+    This function allocates a closure class for a delegate.
+
+    NB! toDg does not preserve any argument attributes of Func such as ref or
+    lazy.
+
+    Params:
+        f = function or function pointer or delegate
+
+    Returns:
+        delegate that internally calls f and does nothing else
+
+*******************************************************************************/
+
+ReturnTypeOf!(Func) delegate (ParametersOf!(Func)) toDg ( Func ) ( Func f )
+{
+    static assert (
+        is(Func == ReturnTypeOf!(Func) function (ParametersOf!(Func))),
+        "toDg does not preserve argument attributes!"
+    );
+
+    alias ParametersOf!(Func) ParameterTypes;
+
+    class Closure
+    {
+        private Func func;
+
+        this (Func func)
+        {
+            this.func = func;
+        }
+
+        ReturnTypeOf!(Func) call (ParameterTypes args)
+        {
+            return this.func(args);
+        }
+    }
+
+    auto closure = new Closure(f);
+
+    return &closure.call;
+}
+
+version ( UnitTest )
+{
+    int testToDgFoo() { return 42; }
+
+    void testToDgBar(int a, int b)
+    {
+        assert (a == 3);
+        assert (b == 4);
+    }
+
+    int testToDgBad(ref int x) { return x; }
+}
+
+unittest
+{
+    static assert (is(typeof(toDg(&testToDgFoo)) == int delegate()));
+    test (toDg(&testToDgFoo)() == 42);
+
+    toDg(&testToDgBar)(3, 4);
+
+    static assert(!is(typeof(toDg(&testToDgBad))));
 }

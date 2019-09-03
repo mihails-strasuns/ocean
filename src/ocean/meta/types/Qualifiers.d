@@ -61,14 +61,7 @@ alias char[]         mstring;
 
 template Const(T)
 {
-    version(D_Version2)
-    {
-        mixin("alias const(T) Const;");
-    }
-    else
-    {
-        alias T Const;
-    }
+    alias const(T) Const;;
 }
 
 unittest
@@ -77,10 +70,7 @@ unittest
 
     static assert (is(Int));
 
-    version(D_Version2)
-    {
-        mixin("static assert (is(Int == const));");
-    }
+    static assert (is(Int == const));
 }
 
 /*******************************************************************************
@@ -101,14 +91,7 @@ unittest
 
 template Immut(T)
 {
-    version(D_Version2)
-    {
-        mixin("alias immutable(T) Immut;");
-    }
-    else
-    {
-        alias T Immut;
-    }
+    alias immutable(T) Immut;
 }
 
 unittest
@@ -117,10 +100,7 @@ unittest
 
     static assert (is(Int));
 
-    version(D_Version2)
-    {
-        mixin("static assert (is(Int == immutable));");
-    }
+    static assert (is(Int == immutable));
 }
 
 /*******************************************************************************
@@ -144,14 +124,7 @@ unittest
 
 template Inout(T)
 {
-    version(D_Version2)
-    {
-        mixin("alias inout(T) Inout;");
-    }
-    else
-    {
-        alias T Inout;
-    }
+    alias inout(T) Inout;
 }
 
 unittest
@@ -166,7 +139,7 @@ unittest
 
 /*******************************************************************************
 
-    In D1 does nothing. In D2 strips top-most type qualifier.
+    Strips top-most type qualifier.
 
     This is a small helper useful for adapting templated code where template
     parameter can possibly be deduced as const or immutable. Using this type
@@ -178,12 +151,12 @@ unittest
     ---
     void foo(Element)(Element[] buf)
     {
-        // this causes an error with D2 if element
+        // this causes an error if element
         // gets deduced as const
         Element tmp;
         tmp = Element.init;
 
-        // this is ok in both d1 and D2
+        // this is ok
         Unqual!(Element) tmp;
         tmp = Element.init;
     }
@@ -193,22 +166,13 @@ unittest
 
 template Unqual(T)
 {
-    version (D_Version2)
+    static if (is(T U == const U))
     {
-        mixin("
-            static if (is(T U == const U))
-            {
-                alias U Unqual;
-            }
-            else static if (is(T U == immutable U))
-            {
-                alias U Unqual;
-            }
-            else
-            {
-                alias T Unqual;
-            }
-        ");
+        alias U Unqual;
+    }
+    else static if (is(T U == immutable U))
+    {
+        alias U Unqual;
     }
     else
     {

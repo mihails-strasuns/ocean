@@ -104,7 +104,7 @@ class LogExt : IConfigExtExtension
 
     ***************************************************************************/
 
-    public this ( Appender.Layout delegate (cstring name) make_layout = null,
+    public this ( scope Appender.Layout delegate (cstring name) make_layout = null,
                   bool use_insert_appender = false )
     {
         this.layout_maker = make_layout is null ? &this.makeLayoutDefault
@@ -154,9 +154,7 @@ class LogExt : IConfigExtExtension
 
         enable_loose_parsing(conf_ext.loose_config_parsing);
 
-        // deprecated: tracks already registered files to prevent double
-        // registration by both old and new logger system. Can be removed in
-        // ocean v4 together with the old logger.
+        // tracks already registered files to prevent double registration
         File[cstring] registered_files;
 
         Appender appender ( istring file, LogUtil.Layout layout )

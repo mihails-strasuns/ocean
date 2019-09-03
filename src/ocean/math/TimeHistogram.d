@@ -139,7 +139,7 @@ struct TimeHistogram
         }
         body
         {
-            const type = typeof(TimeHistogram.bins[0]).stringof;
+            enum type = typeof(TimeHistogram.bins[0]).stringof;
 
             istring res;
 
@@ -196,9 +196,9 @@ struct TimeHistogram
 
     public ulong countMicros ( ulong us )
     {
-        this.count++;
-        this.total_time_micros += us;
-        this.bins[binIndex(us)]++;
+        (&this).count++;
+        (&this).total_time_micros += us;
+        (&this).bins[binIndex(us)]++;
         return us;
     }
 
@@ -213,11 +213,11 @@ struct TimeHistogram
     public double mean_time_micros ( )
     in
     {
-        assert(this.count || !this.total_time_micros);
+        assert((&this).count || !(&this).total_time_micros);
     }
     body
     {
-        return cast(double)this.total_time_micros / this.count;
+        return cast(double)(&this).total_time_micros / (&this).count;
     }
 
     /***************************************************************************
@@ -238,7 +238,7 @@ struct TimeHistogram
         mixin("static assert(is(typeof(Bins.init." ~ bin_name ~ ")));");
 
         mixin("const offset = Bins.init." ~ bin_name ~ ".offsetof;");
-        const index = offset / this.bins[0].sizeof;
+        enum index = offset / this.bins[0].sizeof;
         return this.bins[index];
     }
 
@@ -258,7 +258,7 @@ struct TimeHistogram
 
     public Bins stats ( )
     {
-        return Bins.fromArray(this.bins);
+        return Bins.fromArray((&this).bins);
     }
 
     unittest
@@ -285,21 +285,21 @@ struct TimeHistogram
 
     ***************************************************************************/
 
-    private static uint binIndex ( ulong us )
+    private static size_t binIndex ( size_t us )
     {
         if (!us)
             return 0;
 
-        static Immut!(uint[4][2]) powers_of_10 = [
+        static Immut!(size_t[4][2]) powers_of_10 = [
             [1,     10,     100,     1_000],
             [1_000, 10_000, 100_000, 1_000_000]
         ];
 
-        foreach (uint i, p1000; powers_of_10)
+        foreach (size_t i, p1000; powers_of_10)
         {
             if (us < p1000[$ - 1])
             {
-                foreach (uint j, p; p1000[1 .. $])
+                foreach (size_t j, p; p1000[1 .. $])
                 {
                     if (us < p)
                     {

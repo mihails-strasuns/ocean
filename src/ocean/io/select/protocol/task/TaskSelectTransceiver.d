@@ -208,7 +208,7 @@ class TaskSelectTransceiver
 
     ***************************************************************************/
 
-    public void readConsume ( size_t delegate ( void[] data ) consume )
+    public void readConsume ( scope size_t delegate ( void[] data ) consume )
     {
         this.buffered_reader.readConsume(consume, &this.deviceRead);
     }
@@ -510,16 +510,11 @@ class TaskSelectTransceiver
     }
     body
     {
-        version (D_Version2)
-        {
-            // Work around a linker error caused by a druntime packagin bug: The
-            // druntime is by mistake currently not linked with the
-            // core.sys.posix.sys.uio module.
-            static dst_init = iovec.init;
-            iovec[2] dst = dst_init;
-        }
-        else
-            iovec[2] dst;
+        // Work around a linker error caused by a druntime packagin bug: The
+        // druntime is by mistake currently not linked with the
+        // core.sys.posix.sys.uio module.
+        static dst_init = iovec.init;
+        iovec[2] dst = dst_init;
 
         dst[0] = iovec(dst_a.ptr, dst_a.length);
         dst[1] = iovec(dst_b.ptr, dst_b.length);
@@ -663,7 +658,7 @@ import ocean.text.util.ClassName;
 *******************************************************************************/
 
 public int connect ( Socket: IODevice ) ( TaskSelectTransceiver tst,
-    bool delegate ( Socket socket ) socket_connect )
+    scope bool delegate ( Socket socket ) socket_connect )
 {
     auto socket = cast(Socket)tst.iodev;
     verify(socket !is null, "connect: Unable to cast the I/O " ~

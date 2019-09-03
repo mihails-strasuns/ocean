@@ -227,7 +227,7 @@ public mstring snformat (Args...) (mstring buffer, cstring fmt, Args args)
 
 *******************************************************************************/
 
-public bool sformat (Args...) (FormatterSink sink, cstring fmt, Args args)
+public bool sformat (Args...) (scope FormatterSink sink, cstring fmt, Args args)
 {
     FormatInfo info;
     size_t nextIndex;
@@ -297,7 +297,7 @@ public bool sformat (Args...) (FormatterSink sink, cstring fmt, Args args)
 
 *******************************************************************************/
 
-private void widthSink (FormatterSink sink, cstring str, ref Const!(FormatInfo) f)
+private void widthSink (scope FormatterSink sink, cstring str, ref Const!(FormatInfo) f)
 {
     if (f.flags & Flags.Width)
     {
@@ -365,7 +365,7 @@ private void widthSink (FormatterSink sink, cstring str, ref Const!(FormatInfo) 
 
 *******************************************************************************/
 
-private void handle (T) (T v, FormatInfo f, FormatterSink sf, ElemSink se)
+private void handle (T) (T v, FormatInfo f, scope FormatterSink sf, scope ElemSink se)
 {
     /** The order in which the following conditions are applied matters.
      * Explicit type checks (e.g. associative array, or `is(T == V)`)
@@ -374,7 +374,7 @@ private void handle (T) (T v, FormatInfo f, FormatterSink sf, ElemSink se)
      */
 
     // `typeof(null)` matches way too many things
-    static if (IsTypeofNull!(T))
+    static if (is(T == typeof(null)))
         se("null", f);
 
     // Cannot print enum member name in D1, so just print the value
@@ -423,15 +423,6 @@ private void handle (T) (T v, FormatInfo f, FormatterSink sf, ElemSink se)
         nullWrapper(&v,
                     v.toString((cstring e) { se(e, f); }),
                     se("null", f));
-    else static if (is(typeof(v.toString((size_t delegate(cstring)).init))))
-    {
-        pragma(msg, "Deprecation: Please change toString to accept ",
-               "`scope FormatterSink` instead of `size_t delegate(cstring)` in ",
-               T.stringof);
-        nullWrapper(&v,
-                    v.toString((cstring e) { se(e, f); return e.length; }),
-                    se("null", f));
-    }
     else static if (is(typeof(v.toString()) : cstring))
         nullWrapper(&v, se(v.toString(), f), se("null", f));
     else static if (is(T == interface))
@@ -446,9 +437,9 @@ private void handle (T) (T v, FormatInfo f, FormatterSink sf, ElemSink se)
         foreach (idx, ref m; v.tupleof)
         {
             static if (idx == 0)
-                sf("{ " ~ fieldIdentifier!(T, idx) ~ ": ");
+                sf("{ " ~ identifier!(T.tupleof[idx]) ~ ": ");
             else
-                sf(", " ~ fieldIdentifier!(T, idx) ~ ": ");
+                sf(", " ~ identifier!(T.tupleof[idx]) ~ ": ");
 
             // A bit ugly but it makes string much more readable
             handle(m, f, sf, se);
@@ -571,36 +562,6 @@ private void handle (T) (T v, FormatInfo f, FormatterSink sf, ElemSink se)
 
 /*******************************************************************************
 
-        Helper template to detect `typeof(null)`.
-
-        In D2, `typeof(null)` is a special type, as it has conversion rules like
-        not other type. In D1, it is just `void*`.
-        Since D2 version will match many cases in `handle` because it converts
-        to many different type, we need to single it out, however we cannot
-        just check for `is(T == typeof(null))` as it would mean `== void*` in D1
-
-        Params:
-            T   = Type to check
-
-*******************************************************************************/
-
-private template IsTypeofNull (T)
-{
-    version (D_Version2)
-    {
-        static if (is(T == typeof(null)))
-            public const bool IsTypeofNull = true;
-        else
-            public const bool IsTypeofNull = false;
-    }
-    else
-    {
-        public const bool IsTypeofNull = false;
-    }
-}
-
-/*******************************************************************************
-
     Wrapper to call `toString` methods after checking for `null`
 
     Before calling `toString`, a `null` check should be performed.
@@ -650,7 +611,7 @@ private RetType nullWrapper (T, RetType) (T* v, lazy RetType expr,
 
 *******************************************************************************/
 
-private FormatInfo consume (FormatterSink sink, ref cstring fmt)
+private FormatInfo consume (scope FormatterSink sink, ref cstring fmt)
 {
     FormatInfo ret;
     auto s = fmt.ptr;
@@ -796,9 +757,9 @@ private Const!(char)* skipSpace (Const!(char)* s, Const!(char)* end)
 
 *******************************************************************************/
 
-private void writeSpace (FormatterSink s, size_t n)
+private void writeSpace (scope FormatterSink s, size_t n)
 {
-    const istring Spaces32 = "                                ";
+    static immutable istring Spaces32 = "                                ";
 
     // Make 'n' a multiple of Spaces32.length (32)
     s(Spaces32[0 .. n % Spaces32.length]);
@@ -854,15 +815,12 @@ private bool readNumber (out size_t f, ref Const!(char)* s)
 
 *******************************************************************************/
 
-private void writePointer (in void* v, ref FormatInfo f, ElemSink se)
+private void writePointer (in void* v, ref FormatInfo f, scope ElemSink se)
 {
     alias void* T;
 
-    version (D_Version2)
-        mixin("enum int l = (T.sizeof * 2);");
-    else
-        const int l = (T.sizeof * 2); // Needs to be int to avoid suffix
-    const defaultFormat = "X" ~ l.stringof ~ "#";
+    enum l = (T.sizeof * 2);
+    enum defaultFormat = "X" ~ l.stringof ~ "#";
 
     if (v is null)
         se("null", f);

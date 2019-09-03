@@ -43,10 +43,7 @@ version (UnitTest)
 
 public template identifier ( alias Sym )
 {
-    static if (is(typeof(Sym) == function))
-        const identifier = funcIdentifierHack!(Sym)();
-    else
-        const identifier = Sym.stringof;
+    enum identifier = __traits(identifier, Sym);
 }
 
 ///
@@ -73,26 +70,6 @@ unittest
 
 /*******************************************************************************
 
-    Because of interaction with optional parens syntax, one can't simply do
-    `foo.stringof` if `foo` is a function symbol and fake argument list needs
-    to be constructed.
-
-*******************************************************************************/
-
-private istring funcIdentifierHack(alias Sym)()
-{
-    // Sym.stringof is treated as Sym().stringof
-    // ugly workaround:
-    ParametersOf!(typeof(Sym)) args;
-    auto name = Sym(args).stringof[];
-    size_t bracketIndex = 0;
-    while (name[bracketIndex] != '(' && bracketIndex < name.length)
-        ++bracketIndex;
-    return name[0 .. bracketIndex];
-}
-
-/*******************************************************************************
-
     Template to get the name of the ith member of a struct / class.
 
     Used over plain `identifier` when iterating over aggregate fields with
@@ -108,12 +85,13 @@ private istring funcIdentifierHack(alias Sym)()
 
 *******************************************************************************/
 
+deprecated("Use ocean.meta.codegen.identifier!(T.tupleof[i])")
 public template fieldIdentifier ( T, size_t i )
 {
-    const istring fieldIdentifier = stripQualifiedPrefix(T.tupleof[i].stringof);
+    enum fieldIdentifier = identifier!(T.tupleof[i]);
 }
 
-unittest
+deprecated unittest
 {
     static struct TestStruct
     {
@@ -128,8 +106,5 @@ unittest
     assert (fieldIdentifier!(TestStruct, 1) == "b");
 
     struct Foo { AliasSeq!(int, double, Object) fields; }
-    version (D_Version2)
-        static assert (fieldIdentifier!(Foo, 0) == "__fields_field_0");
-    else
-        static assert (fieldIdentifier!(Foo, 0) == "_fields_field_0");
+    static assert (fieldIdentifier!(Foo, 0) == "__fields_field_0");
 }

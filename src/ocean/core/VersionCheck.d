@@ -25,7 +25,7 @@ import ocean.meta.codegen.CTFE;
 /// ditto
 public template hasFeaturesFrom ( istring libname, ulong major, ulong minor )
 {
-    const hasFeaturesFrom = hasFeaturesFromFunc!(libname, major, minor)();
+    static immutable hasFeaturesFrom = hasFeaturesFromFunc!(libname, major, minor)();
 }
 
 ///
@@ -39,20 +39,7 @@ unittest
 
 private bool hasFeaturesFromFunc ( istring libname, ulong major, ulong minor ) ()
 {
-    // D1 does not support plain nested imports, D2 prohibits aggregate import
-    // exposure, thus two different approaches:
-
-    version (D_Version2)
-    {
-        mixin("import Library = " ~ libname ~ ".LibFeatures;");
-    }
-    else
-    {
-        struct Library
-        {
-            mixin("import " ~ libname ~ ".LibFeatures;");
-        }
-    }
+    mixin("import Library = " ~ libname ~ ".LibFeatures;");
 
     mixin("return is(typeof(Library.has_features_"
         ~ toString(major) ~ "_" ~ toString(minor) ~ "));");

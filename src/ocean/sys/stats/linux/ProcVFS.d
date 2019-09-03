@@ -321,7 +321,7 @@ public struct ProcUptime
         {
             Time res_time;
 
-            auto t = (this.seconds * 100 + this.cents) -
+            auto t = ((&this).seconds * 100 + (&this).cents) -
                 (rhs.seconds * 100 + rhs.cents);
 
             res_time.seconds = t / 100;
@@ -572,7 +572,7 @@ private void throwException( istring name )
 
 *******************************************************************************/
 
-private ProcMemInfo parseProcMemInfoData (cstring delegate() read_next_line)
+private ProcMemInfo parseProcMemInfoData (scope cstring delegate() read_next_line)
 {
     /// Helper function to strip leading spaces
     /// Params:
@@ -658,7 +658,7 @@ private ProcMemInfo parseProcMemInfoData (cstring delegate() read_next_line)
         {
             foreach (i, FieldT; typeof(meminfo.tupleof))
             {
-                case fieldIdentifier!(typeof(meminfo.init), i):
+                case identifier!(typeof(meminfo.init).tupleof[i]):
                     // Using tupleof[i] instead of field
                     // as a workaround for
                     // https://issues.dlang.org/show_bug.cgi?id=16521

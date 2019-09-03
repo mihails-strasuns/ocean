@@ -65,29 +65,13 @@ mixin(global("IMemManager noScanGcMemManager"));
 
 mixin(global("IMemManager gcMemManager"));
 
-version (D_Version2)
+shared static this ( )
 {
-    mixin(`
-        shared static this ( )
-        {
-            noScanMallocMemManager = new MallocMemManager!(false);
-            noScanGcMemManager     = new GCMemManager!(false);
-            mallocMemManager       = new MallocMemManager!(true);
-            gcMemManager           = new GCMemManager!(true);
-        }
-    `);
+    noScanMallocMemManager = new MallocMemManager!(false);
+    noScanGcMemManager     = new GCMemManager!(false);
+    mallocMemManager       = new MallocMemManager!(true);
+    gcMemManager           = new GCMemManager!(true);
 }
-else
-{
-    static this ( )
-    {
-        noScanMallocMemManager = new MallocMemManager!(false);
-        noScanGcMemManager     = new GCMemManager!(false);
-        mallocMemManager       = new MallocMemManager!(true);
-        gcMemManager           = new GCMemManager!(true);
-    }
-}
-
 
 /*******************************************************************************
 
@@ -201,7 +185,8 @@ private class GCMemManager ( bool gc_aware ) : IMemManager
 
     public override void destroy ( ubyte[] buffer )
     {
-        delete buffer;
+        import core.memory;
+        GC.free(buffer.ptr);
     }
 
     /***************************************************************************

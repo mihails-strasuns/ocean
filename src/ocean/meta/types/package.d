@@ -21,7 +21,12 @@
 
 *******************************************************************************/
 
-module ocean.meta.types.package_;
+module ocean.meta.types;
 
+public import ocean.meta.types.Arrays;
+public import ocean.meta.types.Enum;
+public import ocean.meta.types.Function;
 public import ocean.meta.types.Qualifiers;
 public import ocean.meta.types.ReduceType;
+public import ocean.meta.types.Templates;
+public import ocean.meta.types.Typedef;

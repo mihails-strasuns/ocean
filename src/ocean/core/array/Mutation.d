@@ -207,8 +207,8 @@ size_t moveToEnd ( T, Pred = DefaultPredicates.IsEqual!(T) )
     void exch( size_t p1, size_t p2 )
     {
         T t = array[p1];
-        ArrayAssigner!(T).f(array[p1], array[p2]);
-        ArrayAssigner!(T).f(array[p2], t);
+        array[p1] = array[p2];
+        array[p2] = t;
     }
 
     size_t cnt = 0;
@@ -328,7 +328,7 @@ unittest
 unittest
 {
     static void testOne ( cstring _array,
-        bool delegate(char) dg, size_t num, int line = __LINE__ )
+        scope bool delegate(char) dg, size_t num, int line = __LINE__ )
     {
         auto array = _array.dup;
         auto t = new NamedTest(format("removeIf.testOne:{}", line));
@@ -522,7 +522,7 @@ unittest
     test!("==")(partition("".dup, (char c) { return true; }), 0);
 
     static void testOne ( cstring _array,
-        bool delegate(char) dg, size_t num, int line = __LINE__ )
+        scope bool delegate(char) dg, size_t num, int line = __LINE__ )
     {
         auto array = _array.dup;
         auto t = new NamedTest(format("partition.testOne:{}", line));
@@ -576,8 +576,8 @@ T[] sort ( T, Pred = DefaultPredicates.IsLess!(T) )
     void exch( size_t p1, size_t p2 )
     {
         T t  = array[p1];
-        ArrayAssigner!(T).f(array[p1], array[p2]);
-        ArrayAssigner!(T).f(array[p2], t);
+        array[p1] = array[p2];
+        array[p2] = t;
     }
 
     // NOTE: This algorithm operates on the inclusive range [l .. r].
@@ -597,10 +597,10 @@ T[] sort ( T, Pred = DefaultPredicates.IsLess!(T) )
             // don't need to test (j != l) because of the sentinel
             while( pred( v, array[j - 1] ) )
             {
-                ArrayAssigner!(T).f(array[j], array[j - 1]);
+                array[j] = array[j - 1];
                 j--;
             }
-            ArrayAssigner!(T).f(array[j], v);
+            array[j] = v;
         }
     }
 
@@ -784,8 +784,8 @@ T[] reverse (T) (T[] array)
     for (ptrdiff_t i = 0; i < array.length / 2; ++i)
     {
         auto tmp = array[i];
-        ArrayAssigner!(T).f(array[i], array[$-i-1]);
-        ArrayAssigner!(T).f(array[$-i-1], tmp);
+        array[i] = array[$-i-1];
+        array[$-i-1] = tmp;
     }
 
     return array;
@@ -1376,7 +1376,7 @@ public bool containsDuplicate ( T, bool sort = true ) ( T[] array )
 *******************************************************************************/
 
 public int findDuplicates ( T, bool sort = true )
-    ( T[] array, int delegate ( ref size_t index, ref T element ) found )
+    ( T[] array, scope int delegate ( ref size_t index, ref T element ) found )
 {
     if (array.length)
     {
@@ -1584,8 +1584,8 @@ unittest
 *******************************************************************************/
 
 private size_t filterInPlaceCore ( size_t length,
-    bool delegate ( size_t index ) exclude,
-    void delegate ( size_t i, size_t j ) swap )
+    scope bool delegate ( size_t index ) exclude,
+    scope void delegate ( size_t i, size_t j ) swap )
 out (end)
 {
     assert(end <= length, "result length out of bounds");
@@ -1768,7 +1768,7 @@ unittest
 
 *******************************************************************************/
 
-public T[] shuffle ( T ) ( T[] array, size_t delegate ( size_t i ) new_index )
+public T[] shuffle ( T ) ( T[] array, scope size_t delegate ( size_t i ) new_index )
 {
     for (auto i = array.length? array.length - 1 : 0; i; i--)
     {
@@ -1832,7 +1832,7 @@ unittest
 
 bool isClearable ( T ) ( )
 {
-    const size_t n = T.sizeof;
+    static immutable size_t n = T.sizeof;
 
     T init;
 
@@ -2105,45 +2105,6 @@ T quickselect ( T, Pred = DefaultPredicates.IsLess!(T) )
 
     return arr[pivot_index];
 }
-
-/*******************************************************************************
-
-    Function to work around the D1 limitation that static arrays can't be
-    assigned to.
-
-*******************************************************************************/
-
-private template ArrayAssigner (T)
-{
-    // D2 just works
-    version (D_Version2)
-    {
-        void f (ref T a, ref T b)
-        {
-            a = b;
-        }
-    }
-    else
-    {
-        // Cannot have `ref` static array parameter in D1
-        static if (isArrayType!(T) != ArrayKind.Static)
-        {
-            void f (ref T a, ref T b)
-            {
-                a = b;
-            }
-        }
-        else
-        {
-            // In D1, static arrays are ref by default
-            void f (T a, T b)
-            {
-                a[] = b;
-            }
-        }
-    }
-}
-
 
 version (UnitTest)
 {

@@ -34,7 +34,7 @@ import ocean.meta.types.Qualifiers;
 
 template isUTF8StringType ( T )
 {
-    const isUTF8StringType =
+    static immutable isUTF8StringType =
            isArrayType!(T) == ArrayKind.Dynamic
         && is(Unqual!(ElementTypeOf!(T)) == char);
 }
@@ -45,4 +45,29 @@ unittest
     static assert (isUTF8StringType!(char[]));
     static assert (isUTF8StringType!(Immut!(char)[]));
     static assert (!isUTF8StringType!(wchar[]));
+}
+
+/*******************************************************************************
+
+    Params:
+        T = any type
+
+    Returns:
+        Depth of array nesting (1 for plain array) if T is an array, 0 otherwise
+
+*******************************************************************************/
+
+template rankOfArray ( T )
+{
+    static if (is(T S : S[]))
+        enum rankOfArray = 1 + rankOfArray!S;
+    else
+        enum rankOfArray = 0;
+}
+
+///
+unittest
+{
+    static assert (rankOfArray!(real[][]) == 2);
+    static assert (rankOfArray!(real[2][]) == 2);
 }

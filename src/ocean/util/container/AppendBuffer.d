@@ -67,7 +67,7 @@ interface IAppendBufferBase
 interface IAppendBufferReader ( T ) : IAppendBufferBase
 {
     alias T ElementType;
-    const element_size = T.sizeof;
+    static immutable element_size = T.sizeof;
 
     /**************************************************************************
 
@@ -94,13 +94,13 @@ interface IAppendBufferReader ( T ) : IAppendBufferBase
 
         static if (is (T U : U[]) && !is (T == U[]))
         {
-            const static_array_element = true;
+            static immutable static_array_element = true;
 
             alias U[] R;
         }
         else
         {
-            const static_array_element = false;
+            static immutable static_array_element = false;
 
             alias T R;
         }
@@ -121,7 +121,7 @@ interface IAppendBufferReader ( T ) : IAppendBufferBase
     }
     else
     {
-        const static_array_element = false;
+        static immutable static_array_element = false;
     }
 
     /**************************************************************************
@@ -682,7 +682,7 @@ public class AppendBuffer ( T, Base: AppendBufferImpl ): Base, IAppendBufferRead
         {
             // work around DMD bug 7752
 
-            const t_init = [U.init];
+            static immutable t_init = [U.init];
 
             data[] = t_init;
         }
@@ -1317,25 +1317,6 @@ private abstract class AppendBufferImpl: IAppendBufferBase
 
     /**************************************************************************
 
-        Deallocates the content array.
-
-        Params:
-            content_ = content array, previously allocated by newContent() or
-                       modified by setContentLength()
-
-     **************************************************************************/
-
-    deprecated("Rely on GC to free own memory instead")
-    protected void deleteContent ( ref void[] content_ )
-    {
-        verify (content_ !is null,
-                typeof (this).stringof ~ ".deleteContent: content_ is null");
-
-        delete content_;
-    }
-
-    /**************************************************************************
-
         Readjusts limit_invariants.
 
      **************************************************************************/
@@ -1448,8 +1429,7 @@ unittest
     Const!(WithIndirection) cw = w;
     Const!(WithoutIndirection) cwo = wo;
 
-    version (D_Version2)
-        static assert(!is(typeof({ buffer1 ~= cw; })));
+    static assert(!is(typeof({ buffer1 ~= cw; })));
     buffer2 ~= cwo;
 }
 
@@ -1479,9 +1459,6 @@ unittest
     Const!(WithIndirection) cw = w;
     Const!(WithoutIndirection) cwo = wo;
 
-    version (D_Version2)
-    {
-        static assert(!is(typeof({ buffer1 ~= cw; })));
-        static assert(!is(typeof({ buffer2 ~= cwo; })));
-    }
+    static assert(!is(typeof({ buffer1 ~= cw; })));
+    static assert(!is(typeof({ buffer2 ~= cwo; })));
 }

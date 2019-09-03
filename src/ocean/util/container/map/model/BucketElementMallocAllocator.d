@@ -319,7 +319,7 @@ public class BucketElementMallocAllocator (Bucket) : IAllocator
     ***************************************************************************/
 
     public override void parkElements (size_t n,
-                                       void delegate ( IParkingStack park ) dg)
+                                       scope void delegate ( IParkingStack park ) dg)
     {
         scope park = new ParkingStack(n);
         dg(park);
@@ -362,6 +362,5 @@ version (UnitTest)
         // Test if creating a map with a bucket compiles.
         auto allocator = new
             BucketElementMallocAllocator!(Bucket!(hash_t.sizeof, hash_t));
-        delete allocator;
     }
 }

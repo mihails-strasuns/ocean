@@ -17,7 +17,8 @@ module ocean.util.prometheus.collector.StatFormatter;
 import ocean.net.http.TaskHttpConnectionHandler;
 
 import core.stdc.time;
-import Traits = ocean.core.Traits;
+import ocean.meta.traits.Basic;
+import ocean.meta.codegen.Identifier;
 import ocean.math.IEEE;
 import ocean.text.convert.Formatter;
 import ocean.transition;
@@ -45,11 +46,10 @@ public static void formatStats ( ValuesT ) (
 
     foreach (i, ValMemberT; typeof(ValuesT.tupleof))
     {
-        static if (Traits.isPrimitiveType!(ValMemberT))
+        static if (isPrimitiveType!(ValMemberT))
         {
-            sformat(buffer, "{}", Traits.FieldName!(i, ValuesT));
-            appendValue(*Traits.GetField!(i, ValMemberT, ValuesT)(&values),
-                buffer);
+            sformat(buffer, "{}", identifier!(ValuesT.tupleof[i]));
+            appendValue(values.tupleof[i], buffer);
         }
     }
 }
@@ -78,18 +78,18 @@ public static void formatStats ( istring LabelName, ValuesT, LabelT ) (
 
     foreach (i, ValMemberT; typeof(ValuesT.tupleof))
     {
-        static if (Traits.isPrimitiveType!(ValMemberT))
+        static if (isPrimitiveType!(ValMemberT))
         {
-            sformat(buffer, "{} {{", Traits.FieldName!(i, ValuesT));
+            sformat(buffer, "{} {{", identifier!(ValuesT.tupleof[i]));
 
             appendLabel!(LabelName)(label_val, buffer);
 
             sformat(buffer, "}");
-            appendValue(*Traits.GetField!(i, ValMemberT, ValuesT)(&values),
-                buffer);
+            appendValue(values.tupleof[i], buffer);
         }
     }
 }
+
 
 /*******************************************************************************
 
@@ -117,9 +117,9 @@ public static void formatStats ( ValuesT, LabelsT ) ( ValuesT values,
 
     foreach (i, ValMemberT; typeof(ValuesT.tupleof))
     {
-        static if (Traits.isPrimitiveType!(ValMemberT))
+        static if (isPrimitiveType!(ValMemberT))
         {
-            sformat(buffer, "{} {{", Traits.FieldName!(i, ValuesT));
+            sformat(buffer, "{} {{", identifier!(ValuesT.tupleof[i]));
 
             bool first_label = true;
 
@@ -134,14 +134,12 @@ public static void formatStats ( ValuesT, LabelsT ) ( ValuesT values,
                     sformat(buffer, ",");
                 }
 
-                appendLabel!(Traits.FieldName!(j, LabelsT))(
-                    *Traits.GetField!(j, LabelMemberT, LabelsT)(&labels),
-                    buffer);
+                appendLabel!(identifier!(LabelsT.tupleof[j]))(
+                    labels.tupleof[j], buffer);
             }
 
             sformat(buffer, "}");
-            appendValue(*Traits.GetField!(i, ValMemberT, ValuesT)(&values),
-                buffer);
+            appendValue(values.tupleof[i], buffer);
         }
     }
 }
@@ -162,7 +160,7 @@ public static void formatStats ( ValuesT, LabelsT ) ( ValuesT values,
 private static void appendLabel ( istring LabelName, LabelT ) (
     LabelT label_val, ref mstring buffer )
 {
-    static if (Traits.isFloatingPointType!(LabelT))
+    static if (isFloatingPointType!(LabelT))
     {
         sformat(buffer, "{}=\"{:6.}\"", LabelName,
             getSanitized(label_val));
@@ -211,7 +209,7 @@ unittest
 
 private static void appendValue ( T ) ( T value, ref mstring buffer )
 {
-    static if (Traits.isFloatingPointType!(T))
+    static if (isFloatingPointType!(T))
     {
         sformat(buffer, " {:6.}\n", getSanitized(value));
     }
@@ -266,7 +264,7 @@ unittest
 
 private static T getSanitized ( T ) ( T val )
 {
-    static if (Traits.isFloatingPointType!(T))
+    static if (isFloatingPointType!(T))
     {
         if (isNaN(val))
         {
